@@ -1,0 +1,1495 @@
+/* =========================================
+   1. VARIABLES & RESET & BASE
+   ========================================= */
+:root {
+    /* --- PALETTE NMIXX "BLUE VALENTINE" --- */
+    --bg-deep: #050a14;       /* Noir bleuté */
+    --bg-gradient: radial-gradient(circle at 50% 50%, #152036 0%, #050a14 100%);
+    
+    --text-chrome: #e2e8f0;   /* Blanc argenté */
+    --text-blue-ice: #a7ceec; /* Bleu glacé */
+    --accent-glow: #8fa3b8;   /* Lueur douce */
+    
+    /* --- TYPOGRAPHIE --- */
+    --font-title: 'Petit Formal Script', cursive;
+    --font-body: 'Montserrat', sans-serif;
+
+    /* --- DIMENSIONS HERO (Cercle & Photo) --- */
+    --hero-size: 65vh; /* Taille unique pour le spinner ET la photo */
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 100px; 
+}
+
+body {
+    background-color: var(--bg-deep);
+    color: var(--text-chrome);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    margin: 0; padding: 0; box-sizing: border-box;
+}
+
+/* Texture Grain */
+.noise-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 9000; opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+img { max-width: 100%; height: auto; display: block; }
+
+/* =========================================
+   2. NAVIGATION (GLACE FLOTTANTE)
+   ========================================= */
+.navbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.5rem 5%;
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    width: 90%; max-width: 1200px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    border-radius: 20px;
+    z-index: 1000; transition: all 0.4s ease;
+}
+
+.navbar .logo a {
+    font-family: var(--font-title); font-size: 1.5rem; color: var(--text-chrome);
+    text-decoration: none; text-shadow: 0 0 10px rgba(167, 206, 236, 0.3);
+}
+
+.nav-links { list-style: none; display: flex; gap: 2rem; align-items: center; }
+.nav-links a {
+    text-decoration: none; color: #bbb; font-size: 0.85rem;
+    text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;
+}
+.nav-links a:hover { color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.5); }
+.btn-nav { border: 1px solid rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 50px; }
+.btn-nav:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+
+
+/* =========================================
+   3. HEADER (SPINNING & HOLOGRAMME)
+   ========================================= */
+
+.intro-fullscreen {
+    height: 100vh;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    /* Flexbox pour centrer le contenu TEXTE */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: var(--bg-gradient);
+}
+
+/* --- A. LE CERCLE QUI TOURNE (SPINNER) --- */
+.hero-spinner {
+    position: absolute;
+    /* On utilise la variable pour garantir la même taille */
+    width: var(--hero-size);
+    height: var(--hero-size);
+    
+    /* Centrage parfait */
+    top: 50%; 
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    z-index: 0; /* Tout au fond */
+    pointer-events: none;
+}
+
+.spinner-ring {
+    width: 100%; height: 100%; border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(167, 206, 236, 0.5); 
+    border-bottom: 1px solid rgba(167, 206, 236, 0.2);
+    animation: spin 15s linear infinite;
+    box-shadow: 0 0 50px rgba(167, 206, 236, 0.05);
+}
+.spinner-core {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 70%; height: 70%; border-radius: 50%;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    animation: spin 25s linear infinite reverse;
+}
+
+/* --- B. LA PHOTO HOLOGRAMME --- */
+.hero-portrait {
+    position: absolute;
+    
+    /* MÊME TAILLE QUE LE SPINNER */
+    width: var(--hero-size);
+    height: var(--hero-size);
+    
+    /* POSITIONNEMENT : Décalé vers la gauche */
+    top: 50%;
+    /* 30% = décalé à gauche. 50% = centré. */
+    left: 30%; 
+    transform: translate(-50%, -50%);
+    
+    border-radius: 50%;
+    overflow: hidden; /* Important pour que l'image reste ronde */
+    
+    z-index: 1; /* Devant le spinner (0), Derrière le texte (10) */
+    pointer-events: none;
+    
+    /* Style visuel */
+    border: 1px solid rgba(167, 206, 236, 0.2);
+    box-shadow: 0 0 60px rgba(167, 206, 236, 0.05);
+    
+    /* Animation d'entrée */
+    opacity: 0;
+    animation: fadeInPortrait 1.5s ease 0.5s forwards;
+}
+
+.hero-portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    
+    /* EFFET FANTÔME */
+    filter: grayscale(100%) contrast(120%) brightness(110%);
+    mix-blend-mode: screen; /* Mode de fusion pour l'effet hologramme */
+    opacity: 0.4; /* Opacité réduite pour ne pas gêner le texte */
+}
+
+/* Scanlines sur la photo */
+.hero-portrait::after {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: repeating-linear-gradient(to bottom, transparent 0px, transparent 3px, rgba(167, 206, 236, 0.1) 4px);
+    z-index: 2;
+}
+
+/* --- C. LE CONTENU TEXTE --- */
+.hero-content {
+    z-index: 10; /* Au premier plan */
+    position: relative;
+    mix-blend-mode: lighten;
+    /* Petit décalage vers la droite pour équilibrer la photo à gauche */
+    margin-left: 10%; 
+}
+
+.subtitle-role {
+    font-family: var(--font-body); color: var(--text-blue-ice);
+    font-size: 0.9rem; letter-spacing: 4px; text-transform: uppercase;
+    margin-bottom: 10px; animation: fadeInUp 1s ease 0.2s forwards; opacity: 0;
+}
+
+.big-title {
+    font-family: var(--font-title);
+    font-size: clamp(4rem, 12vw, 9rem);
+    line-height: 1.1; margin: 0;
+    background: linear-gradient(to bottom, #ffffff 30%, #a7ceec 50%, #5d7591 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px rgba(167, 206, 236, 0.2));
+    animation: fadeInUp 1s ease 0.4s forwards; opacity: 0;
+}
+
+.pitch {
+    color: #8fa3b8; max-width: 450px; margin: 20px auto 0; font-weight: 300;
+    animation: fadeInUp 1s ease 0.6s forwards; opacity: 0;
+}
+
+/* Scroll Indicator */
+.scroll-indicator {
+    position: absolute; bottom: -250px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    text-decoration: none; z-index: 20;
+    animation: fadeIn 1s ease 1s forwards; opacity: 0;
+}
+.scroll-text { color: #fff; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; }
+.scroll-line { width: 1px; height: 50px; background: linear-gradient(to bottom, var(--text-blue-ice), transparent); }
+
+/* ANIMATIONS */
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes fadeInPortrait { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .navbar { width: 100%; top: 0; border-radius: 0; border-top: none; }
+    .nav-links { display: none; }
+    
+    .hero-content { margin-left: 0; }
+    .hero-portrait {
+        /* Sur mobile, on recentre tout et on réduit */
+        left: 50%; 
+        width: 50vh; height: 50vh;
+        opacity: 0.2;
+    }
+}
+/* --- 5. SLIDER CROQUIS (VERSION ROBUSTE) --- */
+
+.slides-container {
+    /* GRILLE pour empiler les images */
+    display: grid;
+    grid-template-areas: "stack";
+    width: 100%;
+    flex-grow: 1;
+    position: relative;
+    z-index: 2;
+    /* On centre le contenu */
+    align-items: center;
+    justify-content: center;
+}
+
+.slide {
+    /* Tous les slides s'empilent au même endroit */
+    grid-area: stack;
+    width: 100%;
+    
+    /* Flexbox interne */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 60px;
+    
+    /* ÉTAT INACTIF (Caché) */
+    opacity: 0;
+    z-index: 0; /* En dessous */
+    pointer-events: none; /* On ne peut pas cliquer */
+    
+    /* Animation fluide */
+    transition: opacity 1s ease-in-out;
+}
+
+.slide.active {
+    /* ÉTAT ACTIF (Visible) */
+    opacity: 1;
+    z-index: 10; /* Au dessus */
+    pointer-events: auto; /* Cliquable */
+}
+
+/* On garde les colonnes comme avant */
+.slide-content-left, .slide-image-wrapper, .slide-content-right {
+    /* (Garde ton CSS actuel pour ces éléments intérieurs) */
+}
+
+/* --- COLONNES --- */
+.slide-content-left { 
+    flex: 1; 
+    text-align: right; 
+    padding-right: 20px;
+}
+
+.kicker { 
+    display: block; 
+    font-family: var(--font-body);
+    font-size: 0.8rem; 
+    letter-spacing: 4px; 
+    color: var(--text-blue-ice); 
+    margin-bottom: 1.5rem; 
+    text-transform: uppercase;
+    position: relative;
+    display: inline-block;
+}
+
+.kicker::after {
+    content: ''; position: absolute; top: 50%; right: -40px;
+    width: 30px; height: 1px;
+    background: var(--text-blue-ice); opacity: 0.5;
+}
+
+.slide-title { 
+    font-family: var(--font-title);
+    font-size: clamp(2.5rem, 5vw, 4.5rem); 
+    font-weight: 400; line-height: 1.1; margin: 0; 
+    background: linear-gradient(to bottom, #fff 30%, #a7ceec 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 15px rgba(167, 206, 236, 0.3));
+}
+
+.slide-image-wrapper {
+    flex: 1.5; height: 70vh;
+    display: flex; justify-content: center; align-items: center;
+    position: relative;
+    animation: floatImage 6s ease-in-out infinite;
+}
+
+@keyframes floatImage {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+.slide-image-wrapper img {
+    max-height: 80%; max-width: 100%; object-fit: contain;
+    border: 1px solid rgba(167, 206, 236, 0.2);
+    border-radius: 4px;
+    box-shadow: 0 20px 60px rgba(5, 10, 20, 0.8), 0 0 30px rgba(167, 206, 236, 0.1);
+    transition: transform 0.5s ease;
+}
+
+.slide-image-wrapper img:hover {
+    transform: scale(1.02); cursor: zoom-in;
+    border-color: rgba(167, 206, 236, 0.6);
+}
+
+.slide-content-right { 
+    flex: 1; text-align: left; font-size: 0.9rem;
+    padding-left: 20px;
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.meta-list { list-style: none; margin-bottom: 2rem; padding: 0; }
+.meta-list li { margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 500; color: #ccc; }
+.meta-list li:first-child { color: var(--text-blue-ice); font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 1rem; }
+.slide-desc { color: #8fa3b8; line-height: 1.7; max-width: 350px; font-weight: 300; }
+
+.slider-bottom-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 0; 
+    border-top: 1px solid rgba(167, 206, 236, 0.1);
+    font-size: 0.8rem; letter-spacing: 2px;
+    z-index: 2;
+}
+
+.slide-counter { color: var(--text-blue-ice); font-family: var(--font-body); }
+.view-all-link { 
+    color: #fff; text-decoration: none; text-transform: uppercase; 
+    transition: all 0.3s; font-size: 0.75rem;
+}
+.view-all-link:hover { color: var(--text-blue-ice); text-shadow: 0 0 10px rgba(167, 206, 236, 0.5); }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+    .slide.active {
+        flex-direction: column; 
+        justify-content: center; gap: 20px; text-align: center;
+    }
+    .slide-content-left { text-align: center; padding-right: 0; margin-top: 40px; }
+    .kicker::after { display: none; }
+    .slide-image-wrapper { width: 100%; height: 40vh; animation: none; }
+    .slide-content-right { text-align: center; padding-left: 0; border-left: none; margin-bottom: 40px; }
+    .meta-list, .slide-desc { margin: 0 auto 20px auto; }
+}
+
+
+/* =========================================
+   PAGE GALERIE CROQUIS
+   ========================================= */
+
+body.gallery-page {
+    background-color: var(--bg-deep);
+    background-image: radial-gradient(circle at 50% 0%, #1a2639 0%, var(--bg-deep) 70%);
+    min-height: 100vh;
+}
+
+/* --- HEADER SPÉCIFIQUE --- */
+.page-header {
+    padding: 160px 0 80px 0;
+    text-align: center;
+}
+
+.header-label {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 0.8rem; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--text-blue-ice); margin-bottom: 20px;
+    opacity: 0; animation: fadeInUp 1s ease 0.2s forwards;
+}
+
+.header-title {
+    font-family: var(--font-title);
+    font-size: clamp(3rem, 8vw, 6rem);
+    line-height: 1.1; margin-bottom: 30px; font-weight: 400;
+    background: linear-gradient(to bottom, #fff 20%, #a7ceec 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px rgba(167, 206, 236, 0.2));
+    
+    opacity: 0; animation: fadeInUp 1s ease 0.4s forwards;
+}
+
+.header-desc {
+    font-family: var(--font-body);
+    color: #8fa3b8; font-weight: 300; max-width: 600px; margin: 0 auto;
+    line-height: 1.6;
+    opacity: 0; animation: fadeInUp 1s ease 0.6s forwards;
+}
+
+/* --- GRILLE MASONRY --- */
+.gallery-section { 
+    padding-bottom: 100px; 
+    padding-left: 30px;
+    padding-right: 30px;
+                }
+
+.gallery-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.gallery-column {
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+    width: 25%;
+}
+
+/* DÉCALAGE DE LA COLONNE CENTRALE (Effet Cascade) */
+.gallery-column:nth-child(2) { margin-top: 100px; }
+
+/* STYLE DES IMAGES (LOOK "VITRE SOMBRE") */
+.gallery-column img {
+    width: 100%;
+    border-radius: 4px;
+    display: block;
+    
+    /* État initial : Sombre, désaturé */
+    filter: brightness(0.9) contrast(1.1);
+    border: 1px solid rgba(167, 206, 236, 0.1);
+    
+    /* Animation d'entrée */
+    opacity: 0; transform: translateY(40px);
+    transition: all 0.5s ease;
+    
+    position: relative; z-index: 10; cursor: zoom-in;
+}
+
+/* Apparition au chargement (géré par body.page-loaded) */
+body.page-loaded .gallery-column img { opacity: 1; transform: translateY(0); }
+/* Décalage d'apparition */
+body.page-loaded .gallery-column:nth-child(1) img { transition-delay: 0.2s; }
+body.page-loaded .gallery-column:nth-child(2) img { transition-delay: 0.4s; }
+body.page-loaded .gallery-column:nth-child(3) img { transition-delay: 0.6s; }
+
+/* SURVOL DES IMAGES (LUMIÈRE & GLOW) */
+.gallery-column img:hover {
+    filter: grayscale(0%) brightness(1.1); /* Retour de la couleur */
+    transform: scale(1.02) !important;
+    z-index: 50;
+    
+    /* Lueur "Blue Valentine" */
+    border-color: var(--text-blue-ice);
+    box-shadow: 0 10px 40px rgba(5, 10, 20, 0.8), 0 0 20px rgba(167, 206, 236, 0.2);
+}
+
+/* PIED DE GALERIE */
+.gallery-footer {
+    text-align: center; margin-top: 100px;
+    color: #888;
+}
+.gallery-footer p { margin-bottom: 10px; font-size: 0.9rem; letter-spacing: 1px; }
+
+/* --- LIGHTBOX STYLES (Compatible JS) --- */
+.lightbox {
+    display: none; 
+    position: fixed; z-index: 10000;
+    left: 0; top: 0; width: 100%; height: 100%;
+    
+    /* Fond très sombre et flou */
+    background-color: rgba(5, 10, 20, 0.98);
+    backdrop-filter: blur(10px);
+    
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.4s ease;
+    pointer-events: none; 
+}
+
+.lightbox.active { opacity: 1; pointer-events: auto; }
+
+/* Boutons de navigation stylisés */
+.close-btn, .nav-btn {
+    position: absolute; color: var(--text-blue-ice); 
+    font-size: 30px; font-weight: 300;
+    cursor: pointer; transition: 0.3s; user-select: none; 
+    z-index: 10002;
+    background: rgba(255,255,255,0.05); border-radius: 50%;
+    width: 60px; height: 60px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(167, 206, 236, 0.1);
+}
+.close-btn { top: 30px; right: 30px; font-size: 40px; line-height: 1; }
+.prev-btn { left: 30px; top: 50%; transform: translateY(-50%); }
+.next-btn { right: 30px; top: 50%; transform: translateY(-50%); }
+
+.close-btn:hover, .nav-btn:hover { 
+    background: rgba(167, 206, 236, 0.1); 
+    box-shadow: 0 0 15px rgba(167, 206, 236, 0.2);
+    color: #fff; transform: scale(1.1);
+}
+
+/* Structure interne (correspond au JS) */
+.lightbox-carousel-track-container {
+    width: 100%; height: 85vh; overflow: hidden; position: relative;
+    display: flex; align-items: center;
+}
+
+.lightbox-track {
+    display: flex; align-items: center; 
+    /* Ce gap doit correspondre à celui défini dans le JS (const gap = 50) */
+    gap: 50px; 
+    padding: 0 20vw; /* Centrage initial */
+    transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+    will-change: transform;
+}
+
+/* Le wrapper créé par le JS */
+.lightbox-image-wrapper {
+    flex-shrink: 0; 
+    /* Doit correspondre à la largeur calculée dans le JS pour le centrage */
+    width: 60vw; max-width: 1000px; height: 75vh;
+    
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0.2; transform: scale(0.9); transition: all 0.6s ease;
+    filter: grayscale(100%);
+}
+
+.lightbox-image-wrapper img {
+    max-width: 100%; max-height: 100%; object-fit: contain;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6); 
+    border-radius: 4px;
+}
+
+/* Classe ajoutée par le JS sur l'image active */
+.lightbox-image-wrapper.active {
+    opacity: 1; transform: scale(1); z-index: 10;
+    filter: grayscale(0%);
+}
+
+/* --- RESPONSIVE GALERIE --- */
+@media (max-width: 900px) {
+    .gallery-wrapper { flex-direction: column; align-items: center; }
+    .gallery-column { width: 100%; gap: 20px; }
+    .gallery-column:nth-child(2) { margin-top: 0; }
+    
+    /* Adaptation Lightbox Mobile */
+    .lightbox-image-wrapper { width: 90vw; }
+    .lightbox-track { padding: 0 5vw; gap: 20px; } /* Ajuster le JS si besoin pour le gap mobile, ou garder 50 */
+    .nav-btn { display: none; } /* On cache les flèches sur mobile (trop petit) */
+}
+
+/* --- 8. PROJETS MARQUEE (BOUCLE INFINIE FLUIDE) --- */
+
+.projects-marquee-section {
+    background-color: #0b1221; 
+    
+    /* Grille de fond subtile */
+    background-image: 
+        linear-gradient(rgba(167, 206, 236, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(167, 206, 236, 0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
+    
+    padding: 100px 0;
+    overflow: hidden;
+    position: relative;
+    
+    /* Bordures Néon */
+    border-top: 1px solid rgba(167, 206, 236, 0.3);
+    border-bottom: 1px solid rgba(167, 206, 236, 0.3);
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+}
+
+.marquee-container {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    /* Masque dégradé sur les bords */
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.marquee-track {
+    display: flex;
+    width: max-content; /* La largeur s'adapte au contenu total */
+    animation: scroll 40s linear infinite; /* Vitesse constante */
+    padding: 20px 0;
+}
+
+/* Au survol, on met en pause pour laisser le temps de cliquer */
+.marquee-track:hover {
+    animation-play-state: paused;
+}
+
+/* L'ANIMATION MAGIQUE */
+/* On déplace de -50% car le JS a doublé le contenu.
+   À -50%, on est pile au début du clone, qui est identique au début de l'original.
+   Le retour à 0% est donc invisible. */
+@keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.marquee-group {
+    display: flex;
+    /* PAS DE GAP ICI, on gère l'espace sur les items */
+}
+
+/* --- CARTE PROJET --- */
+.project-item {
+    position: relative;
+    width: 450px;
+    height: 280px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    overflow: hidden;
+    background: #000;
+    border: 1px solid rgba(167, 206, 236, 0.1);
+    
+    /* MARGE À DROITE POUR L'ESPACEMENT RÉGULIER */
+    margin-right: 60px; /* C'est la clé de la fluidité ! */
+    
+    filter: grayscale(100%) brightness(0.6) sepia(20%) hue-rotate(180deg);
+    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* L'IMAGE */
+.project-item img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.8s ease;
+    opacity: 0.8;
+}
+
+/* --- SURVOL --- */
+.project-item:hover {
+    filter: grayscale(0%) brightness(1.1) sepia(0%);
+    transform: scale(1.05);
+    z-index: 10;
+    border-color: var(--text-blue-ice);
+    box-shadow: 0 0 30px rgba(167, 206, 236, 0.2);
+}
+
+.project-item:hover img {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+/* --- TEXTE --- */
+.project-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to top, rgba(5, 10, 20, 0.95), transparent);
+    display: flex; flex-direction: column;
+    justify-content: flex-end; align-items: center; text-align: center;
+    padding-bottom: 20px;
+    opacity: 0; transition: opacity 0.4s ease;
+}
+
+.project-item:hover .project-overlay { opacity: 1; }
+
+.project-overlay h3 {
+    font-family: var(--font-title); font-size: 2rem; color: #fff; margin-bottom: 5px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    transform: translateY(20px); transition: transform 0.4s ease;
+}
+
+.project-overlay p {
+    font-family: var(--font-body); font-size: 0.75rem; text-transform: uppercase; 
+    letter-spacing: 2px; color: var(--text-blue-ice);
+    transform: translateY(20px); transition: transform 0.4s ease 0.1s;
+}
+
+.project-item:hover .project-overlay h3,
+.project-item:hover .project-overlay p {
+    transform: translateY(0);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .projects-marquee-section { padding: 60px 0; background-size: 30px 30px; }
+    .project-item { 
+        width: 300px; height: 180px; 
+        margin-right: 30px; /* On réduit la marge sur mobile */
+        filter: grayscale(0%); opacity: 1; 
+    }
+}
+
+/* --- CARTE PROJET --- */
+.project-item {
+    position: relative;
+    width: 450px;
+    height: 280px;
+    flex-shrink: 0;
+    border-radius: 4px; /* Coins moins arrondis pour le style tech */
+    cursor: pointer;
+    overflow: hidden;
+    
+    /* Fond de la carte (visible si l'image charge mal) */
+    background: #000;
+    
+    /* Bordure fine */
+    border: 1px solid rgba(167, 206, 236, 0.1);
+    
+    /* Image éteinte par défaut */
+    filter: grayscale(100%) brightness(0.6) sepia(20%) hue-rotate(180deg);
+    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.project-item img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.8s ease;
+    opacity: 0.8; /* Légèrement transparent pour voir le fond noir */
+}
+
+/* --- SURVOL --- */
+.project-item:hover {
+    /* L'image s'allume complètement */
+    filter: grayscale(0%) brightness(1.1) sepia(0%);
+    
+    transform: scale(1.05);
+    z-index: 10;
+    
+    /* Lueur externe forte au survol */
+    border-color: var(--text-blue-ice);
+    box-shadow: 0 0 30px rgba(167, 206, 236, 0.2);
+}
+
+.project-item:hover img {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+/* --- TEXTE --- */
+.project-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to top, rgba(5, 10, 20, 0.95), transparent);
+    display: flex; flex-direction: column;
+    justify-content: flex-end; align-items: center; text-align: center;
+    padding-bottom: 20px;
+    opacity: 0; transition: opacity 0.4s ease;
+}
+
+.project-item:hover .project-overlay { opacity: 1; }
+
+.project-overlay h3 {
+    font-family: var(--font-title);
+    font-size: 2rem;
+    color: #fff;
+    margin-bottom: 5px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    transform: translateY(20px); transition: transform 0.4s ease;
+}
+
+.project-overlay p {
+    font-family: var(--font-body);
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--text-blue-ice);
+    transform: translateY(20px); transition: transform 0.4s ease 0.1s;
+}
+
+.project-item:hover .project-overlay h3,
+.project-item:hover .project-overlay p {
+    transform: translateY(0);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .projects-marquee-section { padding: 60px 0; background-size: 30px 30px; }
+    .project-item { width: 300px; height: 180px; filter: grayscale(0%); opacity: 1; } /* Toujours allumé sur mobile */
+}
+
+
+
+/* --- 9. PAGE PROJET (IMMERSIVE HORIZONTAL) --- */
+
+body.project-page-body {
+    overflow: hidden; /* Important : on bloque le scroll vertical du body */
+    background-color: var(--bg-deep);
+    color: var(--text-chrome);
+    height: 100vh;
+    width: 100vw;
+}
+
+.split-screen-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* --- PANNEAU GAUCHE (INFOS) --- */
+.project-info-panel {
+    width: 35%; /* Prend un tiers de l'écran */
+    min-width: 450px;
+    height: 100%;
+    padding: 80px 60px;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    
+    background: #050a14;
+    position: relative;
+    z-index: 10;
+    
+    /* Bordure lumineuse à droite pour séparer */
+    border-right: 1px solid rgba(167, 206, 236, 0.1);
+    box-shadow: 10px 0 50px rgba(0,0,0,0.5);
+}
+
+/* Lueur d'ambiance derrière le texte */
+.panel-glow {
+    position: absolute; top: 20%; left: -20%;
+    width: 80%; height: 60%;
+    background: radial-gradient(circle, rgba(167, 206, 236, 0.08) 0%, transparent 70%);
+    filter: blur(60px); pointer-events: none;
+}
+
+.info-content {
+    position: relative; z-index: 2;
+    opacity: 0; animation: fadeInUp 1s ease 0.5s forwards;
+}
+
+/* TYPOGRAPHIE */
+.project-category {
+    font-family: var(--font-body);
+    color: var(--text-blue-ice);
+    text-transform: uppercase; letter-spacing: 3px; font-size: 0.75rem;
+    margin-bottom: 1rem; display: block;
+}
+
+.project-title {
+    font-family: var(--font-title);
+    font-size: clamp(3rem, 5vw, 4.5rem);
+    line-height: 1; margin-bottom: 3rem; font-weight: 400;
+    
+    /* Effet Chromé */
+    background: linear-gradient(to bottom, #fff 30%, #a7ceec 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* MÉTA DONNÉES (Grille) */
+.project-meta {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+    margin-bottom: 3rem;
+    padding-top: 30px;
+    border-top: 1px solid rgba(167, 206, 236, 0.15);
+}
+
+.meta-item strong {
+    display: block; color: var(--text-blue-ice);
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+.meta-item span { color: #ccc; font-size: 0.95rem; }
+
+.project-description {
+    line-height: 1.8; color: #8fa3b8; font-size: 1rem;
+    max-width: 500px; font-weight: 300;
+}
+
+/* Indicateur "Scroll" */
+.scroll-hint {
+    margin-top: 60px; display: flex; align-items: center; gap: 15px;
+    opacity: 0.5;
+}
+.scroll-hint span { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 2px; }
+.scroll-hint .line { height: 1px; width: 60px; background: #fff; }
+
+
+/* --- PANNEAU DROITE (VISUELS SCROLLABLE) --- */
+.project-visuals-panel {
+    flex: 1; /* Prend tout l'espace restant */
+    height: 100%;
+    
+    display: flex;
+    align-items: center; /* Centre verticalement les images */
+    gap: 100px; /* Espace large entre les images */
+    padding: 0 100px; /* Padding début/fin */
+    
+    /* Configuration Scroll Horizontal */
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap; /* Empêche le retour à la ligne */
+    
+    /* Cache la barre de scroll */
+    scrollbar-width: none; -ms-overflow-style: none;
+    cursor: grab; /* Curseur main */
+    
+    /* Fond dégradé subtil */
+    background: radial-gradient(circle at 50% 50%, #152036 0%, #050a14 100%);
+}
+.project-visuals-panel::-webkit-scrollbar { display: none; }
+.project-visuals-panel:active { cursor: grabbing; }
+
+
+/* --- ITEMS VISUELS --- */
+.visual-item img, 
+.visual-item video {  /* <--- AJOUT ICI */
+    height: 100%; 
+    width: auto; /* Garde le ratio */
+    object-fit: cover; /* Remplit bien le bloc sans déformer */
+    border-radius: 4px;
+    
+    /* Ombre portée */
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    
+    /* Effet "Glass" par défaut */
+    border: 1px solid rgba(167, 206, 236, 0.1);
+    
+    transition: transform 0.5s ease, border-color 0.3s ease;
+}
+
+/* --- ITEMS VISUELS (Vidéos & Images alignées) --- */
+
+.visual-item {
+    /* On ne fixe pas la hauteur du conteneur, il s'adapte au contenu */
+    height: auto; 
+    flex-shrink: 0;
+    position: relative;
+    
+    /* Pour que la légende (caption) soit bien placée en dessous */
+    display: flex;
+    flex-direction: column;
+    
+    /* Animation d'entrée */
+    opacity: 0; transform: translateX(50px);
+    animation: fadeInRight 1s ease forwards;
+}
+
+/* On applique la taille stricte DIRECTEMENT sur l'image ou la vidéo */
+.visual-item img, 
+.visual-item video {
+    /* C'EST ICI QUE SE JOUE L'ALIGNEMENT */
+    height: 70vh; /* Hauteur fixe pour tout le monde (70% de l'écran) */
+    width: auto;  /* La largeur s'adapte pour garder le ratio */
+    
+    display: block; /* Supprime les espaces fantômes */
+    object-fit: cover; /* Assure que le bloc est bien rempli */
+    
+    border-radius: 4px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    
+    /* Style "Glass" */
+    border: 1px solid rgba(167, 206, 236, 0.1);
+    
+    transition: transform 0.5s ease, border-color 0.3s ease;
+}
+
+.visual-item:hover video[controls] {
+    transform: none; /* La vidéo ne grandit pas */
+    border-color: rgba(167, 206, 236, 0.4); /* On garde quand même la bordure lumineuse */
+}
+
+/* LÉGENDE (CAPTION) */
+.visual-caption {
+    margin-top: 15px; /* Espace régulier entre image et texte */
+    display: block;
+    color: #666; 
+    font-size: 0.75rem; 
+    letter-spacing: 2px; 
+    text-transform: uppercase;
+    text-align: right; /* Aligné à droite de l'image */
+    
+    /* S'assure que la légende ne dépasse pas la largeur de l'image */
+    max-width: 100%; 
+}
+
+/* EFFET AU SURVOL */
+.visual-item:hover img {
+    transform: scale(1.02);
+    border-color: rgba(167, 206, 236, 0.6);
+    box-shadow: 0 20px 60px rgba(5, 10, 20, 0.8), 0 0 30px rgba(167, 206, 236, 0.2);
+}
+
+/* DÉLAIS D'ANIMATION (CASCADE) */
+.visual-item:nth-child(1) { animation-delay: 0.6s; }
+.visual-item:nth-child(2) { animation-delay: 0.7s; }
+.visual-item:nth-child(3) { animation-delay: 0.8s; }
+.visual-item:nth-child(4) { animation-delay: 0.9s; }
+.visual-item:nth-child(5) { animation-delay: 1.0s; }
+
+
+/* --- RESPONSIVE MOBILE --- */
+@media (max-width: 900px) {
+    .visual-item img, 
+    .visual-item video {
+        /* Sur mobile, on change la logique : largeur 100%, hauteur auto */
+        width: 100%;
+        height: auto;
+        max-height: 70vh; /* Pour ne pas être trop haut quand même */
+    }
+}
+
+
+
+/* BOUTON RETOUR */
+.back-button {
+    position: fixed; top: 40px; left: 40px; z-index: 100;
+    text-decoration: none; color: #fff;
+    display: flex; align-items: center; gap: 10px;
+    mix-blend-mode: difference; /* Pour être visible sur clair ou foncé */
+    transition: transform 0.3s;
+}
+.arrow-icon { font-size: 1.5rem; transition: transform 0.3s; }
+.btn-text { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; }
+
+.back-button:hover .arrow-icon { transform: translateX(-5px); }
+
+
+/* --- RESPONSIVE MOBILE (IMPORTANT) --- */
+@media (max-width: 900px) {
+    body.project-page-body { 
+        overflow: auto; /* On réactive le scroll vertical sur mobile */
+        height: auto; 
+    }
+    
+    .split-screen-container { 
+        flex-direction: column; /* On empile tout */
+        height: auto; 
+        width: 100%;
+    }
+    
+    .project-info-panel { 
+        width: 100%; min-width: 0; height: auto; 
+        padding: 100px 30px 60px 30px;
+        border-right: none; border-bottom: 1px solid rgba(167, 206, 236, 0.1);
+    }
+    
+    .scroll-hint { display: none; } /* Pas de scroll horizontal sur mobile */
+    
+    .project-visuals-panel { 
+        display: flex; flex-direction: column; /* Empilement vertical des images */
+        height: auto;
+        padding: 40px 20px;
+        gap: 40px;
+        overflow: visible;
+        white-space: normal;
+    }
+    
+    .visual-item { 
+        height: auto; width: 100%; 
+        opacity: 1; transform: none; animation: none; /* Pas d'anim complexe sur mobile */
+    }
+    
+    .visual-item img { 
+        width: 100%; height: auto; 
+    }
+}
+
+/* --- 10. ANIMATION DE TRANSITION PAGE --- */
+.transition-curtain {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #000; z-index: 9999;
+    transform: scaleY(1); transform-origin: bottom;
+    transition: transform 0.8s cubic-bezier(0.7, 0, 0.3, 1);
+    pointer-events: none; /* IMPORTANT : Ne bloque pas les clics */
+}
+
+body.page-loaded .transition-curtain { transform: scaleY(0); transform-origin: top; }
+body.is-leaving .transition-curtain { transform: scaleY(1); transform-origin: bottom; }
+
+.info-content { opacity: 0; transform: translateY(20px); animation: fadeInUp 1s ease 0.4s forwards; }
+.visual-item { opacity: 0; transform: translateX(50px); animation: fadeInRight 1s ease forwards; }
+
+.visual-item:nth-child(1) { animation-delay: 0.4s; }
+.visual-item:nth-child(2) { animation-delay: 0.5s; }
+.visual-item:nth-child(3) { animation-delay: 0.6s; }
+.visual-item:nth-child(4) { animation-delay: 0.7s; }
+.visual-item:nth-child(5) { animation-delay: 0.8s; }
+
+@keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInRight { to { opacity: 1; transform: translateX(0); } }
+
+/* --- 11. RESPONSIVE GLOBAL --- */
+@media (max-width: 1024px) {
+    .slide { flex-direction: column; text-align: center; gap: 20px; padding-top: 60px; }
+    .slide-content-left, .slide-content-right { text-align: center; }
+    .slide-title { font-size: 2.5rem; }
+    .slide-image-wrapper { max-height: 40vh; flex: auto; }
+}
+
+@media (max-width: 900px) {
+    body.project-page-body { overflow: auto; }
+    .split-screen-container { flex-direction: column; height: auto; }
+    .project-info-panel, .project-visuals-panel { width: 100%; height: auto; padding: 40px 20px; }
+    .project-visuals-panel { flex-direction: column; overflow: visible; }
+    .visual-item { height: auto; width: 100%; margin-bottom: 20px; }
+    .visual-item img { width: 100%; height: auto; }
+}
+
+@media (max-width: 768px) {
+    .big-title { font-size: 3rem; }
+    .nav-links { display: none; }
+    .gallery-column:nth-child(2) { margin-top: 0; }
+    
+    .nav-btn { font-size: 30px; padding: 10px; }
+    .lightbox-image-wrapper { width: 85vw; }
+    .lightbox-track { gap: 20px; padding: 0 7.5vw; }
+    
+    .project-item { width: 280px; height: 180px; }
+}
+
+.about-section {
+    background-color: var(--bg-deep);
+    padding: 150px 0;
+    position: relative;
+    overflow: visible; /* Pour laisser les effets déborder */
+}
+
+/* Lueur d'ambiance en fond */
+.about-section::before {
+    content: ''; position: absolute; top: 20%; left: -10%; 
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(167, 206, 236, 0.08) 0%, transparent 70%);
+    filter: blur(80px); pointer-events: none;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr; /* Bio plus petite, CV plus large */
+    gap: 80px;
+    align-items: start;
+}
+
+/* --- COLONNE GAUCHE (BIO FLOTTANTE) --- */
+.bio-column {
+    position: sticky; /* L'élément reste collé quand on scrolle */
+    top: 120px; /* Marge par rapport au haut de l'écran */
+    padding-right: 20px;
+    padding-left: 20px;
+}
+
+.profile-card {
+    /* Petit effet de flottement global */
+    animation: floatBio 8s ease-in-out infinite;
+}
+
+@keyframes floatBio {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+/* --- PHOTO PORTAL --- */
+.about-photo-wrapper {
+    position: relative;
+    width: 180px; height: 180px;
+    margin-bottom: 40px;
+    display: flex; justify-content: center; align-items: center;
+}
+
+.about-photo {
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    object-fit: cover;
+    /* Traitement image : noir et blanc bleuté */
+    filter: grayscale(100%) contrast(1.2) brightness(0.9);
+    z-index: 2;
+    border: 1px solid rgba(167, 206, 236, 0.3);
+}
+
+/* L'orbite qui tourne */
+.photo-orbit {
+    position: absolute;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    border: 1px dashed rgba(167, 206, 236, 0.3);
+    border-top-color: var(--text-blue-ice);
+    animation: spinBio 20s linear infinite;
+    z-index: 1;
+}
+
+@keyframes spinBio { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* --- TEXTES BIO --- */
+.section-label {
+    display: block; font-family: var(--font-body); font-size: 0.75rem;
+    letter-spacing: 4px; text-transform: uppercase; color: #666;
+    margin-bottom: 15px;
+}
+
+.bio-statement {
+    font-family: var(--font-body);
+    font-size: 2.2rem; line-height: 1.2; font-weight: 300;
+    color: #fff; margin-bottom: 25px;
+}
+
+.highlight-script {
+    font-family: var(--font-title); /* Script */
+    color: var(--text-blue-ice);
+    font-size: 2.8rem;
+    display: block; /* Force le retour à la ligne pour le script */
+    margin-top: 10px;
+}
+
+.bio-details {
+    color: #8fa3b8; line-height: 1.8; font-weight: 300;
+    margin-bottom: 30px; max-width: 90%;
+}
+
+/* --- TAGS COMPÉTENCES (RUNES) --- */
+.skills-container {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 40px;
+}
+
+.skill-tag {
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-blue-ice);
+    padding: 8px 16px;
+    border: 1px solid rgba(167, 206, 236, 0.2);
+    border-radius: 4px;
+    background: rgba(167, 206, 236, 0.02);
+    transition: all 0.3s;
+}
+
+.skill-tag:hover {
+    background: rgba(167, 206, 236, 0.1);
+    box-shadow: 0 0 15px rgba(167, 206, 236, 0.2);
+    border-color: var(--text-blue-ice);
+    cursor: default;
+}
+
+/* Bouton fantôme */
+.btn-ghost {
+    display: inline-block;
+    color: #fff; text-decoration: none; text-transform: uppercase;
+    letter-spacing: 2px; font-size: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.3);
+    padding-bottom: 5px; transition: all 0.3s;
+}
+.btn-ghost:hover { border-color: var(--text-blue-ice); color: var(--text-blue-ice); }
+
+
+/* --- COLONNE DROITE (TIMELINE CV) --- */
+.cv-column {
+    padding-top: 20px;
+    /* Ligne verticale de timeline à gauche */
+    border-left: 1px solid rgba(167, 206, 236, 0.1);
+    padding-left: 40px;
+}
+
+.cv-group { margin-bottom: 60px; }
+
+.cv-group-title {
+    font-family: var(--font-title);
+    font-size: 2rem; color: #fff; margin-bottom: 30px;
+    margin-left: -55px; /* Pour aligner le titre avec la ligne verticale */
+    display: flex; align-items: center; gap: 15px;
+}
+
+/* Petit point lumineux pour le titre */
+.cv-group-title::before {
+    content: ''; display: block; width: 9px; height: 9px;
+    background: var(--text-blue-ice); border-radius: 50%;
+    box-shadow: 0 0 10px var(--text-blue-ice);
+}
+
+/* --- CARTE CV (GLASSMORPHISM) --- */
+.cv-item {
+    position: relative;
+    /* Fond Verre Fumé */
+    background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 20px;
+    transition: all 0.4s ease;
+}
+
+.cv-item::before {
+    /* Petite ligne de connexion avec la timeline */
+    content: ''; position: absolute; top: 30px; left: -46px;
+    width: 40px; height: 1px; background: rgba(167, 206, 236, 0.2);
+}
+
+.cv-item::after {
+    /* Petit point sur la timeline */
+    content: ''; position: absolute; top: 27px; left: -44px;
+    width: 5px; height: 5px; background: #050a14;
+    border: 1px solid var(--text-blue-ice); border-radius: 50%;
+}
+
+.cv-item:hover {
+    transform: translateX(10px); /* Glisse vers la droite */
+    background: linear-gradient(145deg, rgba(167, 206, 236, 0.05) 0%, transparent 100%);
+    border-color: rgba(167, 206, 236, 0.3);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.cv-year {
+    display: block; font-size: 0.75rem; color: var(--text-blue-ice);
+    letter-spacing: 2px; margin-bottom: 10px; font-weight: 600;
+}
+
+.cv-content strong {
+    display: block; font-size: 1.1rem; color: #fff; margin-bottom: 5px;
+}
+
+.cv-content span {
+    display: block; font-size: 0.9rem; color: #888; font-style: italic; margin-bottom: 10px;
+}
+
+.cv-content p {
+    font-size: 0.95rem; color: #aaa; line-height: 1.6; margin: 0;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .about-grid { grid-template-columns: 1fr; gap: 60px; }
+    .bio-column { position: relative; top: 0; text-align: center; padding-right: 0; }
+    .about-photo-wrapper { margin: 0 auto 30px auto; }
+    .skills-container { justify-content: center; }
+    
+    .cv-column { padding-left: 20px; border-left: 1px solid rgba(167, 206, 236, 0.1); }
+    .cv-group-title { margin-left: -32px; } /* Ajustement mobile */
+    .cv-item::before { width: 15px; left: -21px; }
+    .cv-item::after { left: -25px; }
+}
+
+/* --- 7. FOOTER (CINEMATIC ENDING) --- */
+
+.singular-footer {
+    position: relative;
+    background-color: var(--bg-deep);
+    padding: 150px 0 50px 0;
+    overflow: hidden;
+    border-top: 1px solid rgba(167, 206, 236, 0.05);
+}
+
+/* --- AMBIANCE LUMINEUSE (AUBE) --- */
+.footer-glow {
+    position: absolute;
+    bottom: -20%; left: 50%;
+    transform: translateX(-50%);
+    width: 80%; height: 500px;
+    background: radial-gradient(ellipse at center, rgba(167, 206, 236, 0.15) 0%, transparent 70%);
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.footer-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* --- ACCROCHE --- */
+.cta-label {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 0.9rem; letter-spacing: 4px; text-transform: uppercase;
+    color: #666; margin-bottom: 10px;
+}
+
+.cta-title {
+    font-family: var(--font-title);
+    font-size: clamp(3rem, 8vw, 6rem); /* Immense */
+    line-height: 1.1; font-weight: 400;
+    margin-bottom: 40px;
+    
+    /* Dégradé Argenté/Bleu */
+    background: linear-gradient(to bottom, #fff 20%, #a7ceec 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    
+    /* Ombre portée douce */
+    filter: drop-shadow(0 0 20px rgba(167, 206, 236, 0.2));
+}
+
+/* --- EMAIL MONUMENTAL --- */
+.big-email {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: clamp(1.5rem, 5vw, 3.5rem); /* Responsive */
+    font-weight: 300;
+    color: #fff;
+    text-decoration: none;
+    margin-bottom: 120px;
+    
+    transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+    position: relative;
+}
+
+/* Petit point lumineux qui suit (optionnel, simple underline ici) */
+.big-email::after {
+    content: ''; position: absolute; bottom: -10px; left: 50%;
+    width: 0%; height: 1px;
+    background: var(--text-blue-ice);
+    transition: all 0.5s ease;
+    transform: translateX(-50%);
+}
+
+.big-email:hover {
+    color: var(--text-blue-ice);
+    letter-spacing: 2px; /* Les lettres s'écartent */
+    text-shadow: 0 0 30px rgba(167, 206, 236, 0.6);
+    transform: scale(1.05);
+}
+
+.big-email:hover::after { width: 100%; }
+
+
+/* --- BARRE DU BAS --- */
+.footer-bottom {
+    width: 100%;
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 30px;
+    font-size: 0.8rem;
+}
+
+/* Réseaux sociaux */
+.social-links {
+    display: flex; gap: 30px;
+}
+
+.social-item {
+    color: #888; text-decoration: none; text-transform: uppercase; letter-spacing: 1px;
+    transition: color 0.3s; position: relative;
+}
+
+.social-item:hover { color: #fff; }
+
+.social-item::before {
+    /* Petit point bleu au survol */
+    content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%);
+    width: 4px; height: 4px; background: var(--text-blue-ice); border-radius: 50%;
+    opacity: 0; transition: opacity 0.3s;
+}
+.social-item:hover::before { opacity: 1; }
+
+
+/* Copyright */
+.copyright {
+    color: #444; font-family: var(--font-body);
+}
+
+
+/* Bouton Retour en haut (Flèche magnétique) */
+.back-to-top {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    text-decoration: none; color: #666; transition: color 0.3s;
+}
+
+.arrow-up {
+    font-size: 1.5rem; transition: transform 0.4s ease;
+}
+
+.top-text {
+    font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0;
+    transition: opacity 0.3s, transform 0.3s; transform: translateY(5px);
+}
+
+.back-to-top:hover { color: var(--text-blue-ice); }
+
+.back-to-top:hover .arrow-up {
+    transform: translateY(-5px); /* Monte */
+}
+
+.back-to-top:hover .top-text {
+    opacity: 1; transform: translateY(0);
+}
+
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    .cta-title { margin-bottom: 20px; }
+    .big-email { margin-bottom: 80px; }
+    
+    .footer-bottom {
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+    }
+    
+    .social-links { gap: 20px; }
+}
