@@ -2,127 +2,211 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("--- SITE CHARGÉ : SCRIPT ACTIF ---");
 
     // ======================================================
-    // 0. MARQUEE INFINI (Clonage automatique)
+    // 1. GESTION DES TRANSITIONS DE PAGE
     // ======================================================
-    const marqueeTrack = document.querySelector('.marquee-track');
-    const marqueeGroup = document.querySelector('.marquee-group');
-    if (marqueeTrack && marqueeGroup) {
-    const clone = marqueeGroup.cloneNode(true);
-    clone.setAttribute('aria-hidden', 'true');
-    marqueeTrack.appendChild(clone);
-}
-
-    
-
-
-    // ======================================================
-    // 1. GESTION DES TRANSITIONS DE PAGE (RIDEAU & CHARGEMENT)
-    // ======================================================
-    
-    // A. L'ARRIVÉE : On lève le rideau
     setTimeout(() => {
         document.body.classList.add('page-loaded');
         console.log("Page chargée : rideau levé.");
     }, 100);
 
-    // B. LE DÉPART : On baisse le rideau au clic sur un lien
     const transitionLinks = document.querySelectorAll('.transition-link, .project-item, .back-button, .logo a, .nav-links a');
-
     transitionLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             const href = link.getAttribute('href');
-            // Si c'est un lien interne valide (pas # seul, pas vide, pas la page actuelle)
             if (href && !href.startsWith('#') && href !== window.location.href) {
                 e.preventDefault(); 
                 const target = link.href;
-
-                console.log("Départ vers : " + target);
                 document.body.classList.remove('page-loaded');
                 document.body.classList.add('is-leaving');
-
-                setTimeout(() => {
-                    window.location.href = target;
-                }, 800);
+                setTimeout(() => { window.location.href = target; }, 800);
             }
         });
     });
 
-
     // ======================================================
-    // 2. GESTION DU SCROLL DOUX (Smooth Scroll) POUR LES ANCRES
+    // 2. SMOOTH SCROLL POUR ANCRES
     // ======================================================
-    // Indispensable pour le bouton "Explore"
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             const targetId = this.getAttribute('href');
             if (targetId === '#') return;
-            
             e.preventDefault();
             const targetElement = document.querySelector(targetId);
             if (targetElement) {
-                targetElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
     });
 
-
     // ======================================================
-    // 3. GESTION DU SCROLL HORIZONTAL FLUIDE (Projets)
+    // 3. SLIDER ACCUEIL (AVEC BARRE DE DÉFILEMENT)
     // ======================================================
-    const scrollContainer = document.querySelector('#horizontal-scroll');
+    const container = document.querySelector('.projects-container');
+    const thumb = document.getElementById('scroll-thumb');
+    const track = document.querySelector('.scroll-track');
 
-    if (scrollContainer) {
-        console.log("Scroll horizontal fluide activé.");
-        let currentScroll = 0;
-        let targetScroll = 0;
-        let isScrolling = false;
-        const ease = 0.05; 
+    if (container && thumb && track) {
+        let isDragging = false;
+        let startX;
+        let startThumbLeft;
 
-        scrollContainer.addEventListener('wheel', (evt) => {
-            evt.preventDefault();
-            // On accélère un peu le scroll (* 2.5) pour que ce soit moins lent
-            targetScroll += evt.deltaY * 2.5; 
-            
-            // --- CORRECTION ICI ---
-            // On utilise clientWidth au lieu de window.innerWidth
-            const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
-            
-            targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
-            
-            if (!isScrolling) {
-                isScrolling = true;
-                requestAnimationFrame(animateScroll);
+        thumb.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            thumb.style.cursor = 'grabbing';
+            document.body.style.userSelect = 'none';
+            startX = e.clientX;
+            startThumbLeft = thumb.offsetLeft;
+            // On désactive le scroll-behavior smooth CSS pendant le drag pour éviter le lag
+            container.style.scrollBehavior = 'auto'; 
+        });
+
+        window.addEventListener('mouseup', () => {
+            if(isDragging) {
+                isDragging = false;
+                thumb.style.cursor = 'grab';
+                document.body.style.userSelect = '';
+                // On remet le scroll smooth pour la molette
+                container.style.scrollBehavior = 'smooth';
             }
-        }, { passive: false });
+        });
 
-        function animateScroll() {
-            currentScroll += (targetScroll - currentScroll) * ease;
-            scrollContainer.scrollLeft = currentScroll;
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const mouseDelta = e.clientX - startX;
+            let newLeft = startThumbLeft + mouseDelta;
+            const maxThumbMove = track.clientWidth - thumb.clientWidth;
+            
+            if (newLeft < 0) newLeft = 0;
+            if (newLeft > maxThumbMove) newLeft = maxThumbMove;
+            
+            thumb.style.left = `${newLeft}px`;
+            
+            const scrollPercentage = newLeft / maxThumbMove;
+            const maxScrollLeft = container.scrollWidth - container.clientWidth;
+            container.scrollLeft = scrollPercentage * maxScrollLeft;
+        });
 
-            if (Math.abs(targetScroll - currentScroll) > 1) {
-                requestAnimationFrame(animateScroll);
-            } else {
-                isScrolling = false;
-            }
-        }
-        
-        window.addEventListener('resize', () => {
-             // --- CORRECTION ICI AUSSI ---
-             const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
-             targetScroll = Math.min(targetScroll, maxScroll);
+        // Sync inverse (Scroll -> Curseur)
+        container.addEventListener('scroll', () => {
+            if (isDragging) return;
+            const maxScrollLeft = container.scrollWidth - container.clientWidth;
+            const scrollPercentage = container.scrollLeft / maxScrollLeft;
+            const maxThumbMove = track.clientWidth - thumb.clientWidth;
+            const newThumbPosition = scrollPercentage * maxThumbMove;
+            thumb.style.left = `${newThumbPosition}px`;
         });
     }
 
+    // ======================================================
+    // 4. SLIDER PAGE PROJET (PANNEAU DROITE - FLUIDE / INERTIE)
+    // ======================================================
+    const projectPanel = document.querySelector('.project-visuals-panel');
 
+    if (projectPanel) {
+        console.log("Panel Projet détecté : Mode Fluide Activé.");
+        
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+        
+        // Variables pour la fluidité (Inertie)
+        let targetScroll = 0;
+        let currentScroll = 0;
+        let isAnimating = false;
+
+        // Configuration de la fluidité (0.05 = très lent/lourd, 0.2 = rapide)
+        const ease = 0.08; 
+
+        // Initialisation position
+        currentScroll = projectPanel.scrollLeft;
+        targetScroll = currentScroll;
+
+        // Boucle d'animation (C'est ça qui crée la fluidité)
+        function animateScroll() {
+            // On rapproche "current" de "target" petit à petit
+            currentScroll += (targetScroll - currentScroll) * ease;
+            
+            // On applique le mouvement
+            projectPanel.scrollLeft = currentScroll;
+
+            // Si on est assez proche de la cible, on arrête le calcul pour économiser la batterie
+            if (Math.abs(targetScroll - currentScroll) > 0.5) {
+                requestAnimationFrame(animateScroll);
+                isAnimating = true;
+            } else {
+                isAnimating = false;
+            }
+        }
+
+        projectPanel.addEventListener('mousedown', (e) => {
+            isDown = true;
+            projectPanel.style.cursor = 'grabbing';
+            projectPanel.style.userSelect = 'none';
+            
+            // Point de départ
+            startX = e.pageX;
+            // On note où on est au moment du clic
+            scrollLeft = projectPanel.scrollLeft;
+            
+            // On synchronise nos variables pour éviter les sauts
+            currentScroll = scrollLeft;
+            targetScroll = scrollLeft;
+            
+            // On coupe le CSS smooth s'il y en a
+            projectPanel.style.scrollBehavior = 'auto'; 
+        });
+
+        const stopDrag = () => {
+            isDown = false;
+            projectPanel.style.cursor = 'grab';
+            projectPanel.style.userSelect = '';
+        };
+
+        projectPanel.addEventListener('mouseleave', stopDrag);
+        projectPanel.addEventListener('mouseup', stopDrag);
+
+        projectPanel.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            
+            const x = e.pageX;
+            // Calcul de la distance parcourue par la souris
+            const walk = (x - startX) * 1.5; // * 1.5 pour aller un peu plus vite que la souris
+            
+            // On met à jour la CIBLE (target), pas le scroll direct
+            targetScroll = scrollLeft - walk;
+            
+            // On s'assure de ne pas sortir des limites
+            const maxScroll = projectPanel.scrollWidth - projectPanel.clientWidth;
+            targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+
+            // Si l'animation ne tourne pas déjà, on la lance
+            if (!isAnimating) {
+                requestAnimationFrame(animateScroll);
+            }
+        });
+        
+        // Support Molette (Haut/Bas -> Gauche/Droite) avec fluidité
+        projectPanel.addEventListener('wheel', (evt) => {
+            if (evt.deltaY !== 0) {
+                evt.preventDefault();
+                // On ajoute le mouvement de molette à la cible
+                targetScroll += evt.deltaY * 2;
+                
+                // Limites
+                const maxScroll = projectPanel.scrollWidth - projectPanel.clientWidth;
+                targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+                
+                if (!isAnimating) requestAnimationFrame(animateScroll);
+            }
+        });
+    }
 
     // ======================================================
-    // 5. GESTION LIGHTBOX CARROUSEL (Galerie Croquis)
+    // 5. LIGHTBOX CARROUSEL
     // ======================================================
     const gallerySourceImages = document.querySelectorAll('.gallery-column img');
-    
     if (gallerySourceImages.length > 0) {
         const lightbox = document.getElementById('lightbox');
         const lightboxTrack = document.getElementById('lightbox-track');
@@ -133,7 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentIndex = 0;
         let lightboxImages = [];
 
-        // --- 1. INITIALISATION : CLONAGE DES IMAGES ---
         gallerySourceImages.forEach((sourceImg, index) => {
             const wrapper = document.createElement('div');
             wrapper.classList.add('lightbox-image-wrapper');
@@ -144,23 +227,16 @@ document.addEventListener('DOMContentLoaded', () => {
             wrapper.appendChild(img);
             lightboxTrack.appendChild(wrapper);
             lightboxImages.push(wrapper);
-
-            // Clic sur l'image originale pour ouvrir
             sourceImg.style.cursor = "zoom-in"; 
-            sourceImg.addEventListener('click', function() {
-                openLightbox(index);
-            });
+            sourceImg.addEventListener('click', function() { openLightbox(index); });
         });
 
-        // --- 2. FONCTIONS DE MISE À JOUR ---
         function updateCarousel() {
             if(lightboxImages.length === 0) return;
             const imageWidth = lightboxImages[0].offsetWidth; 
             const gap = 50; 
             const translateX = - (currentIndex * (imageWidth + gap));
-            
             lightboxTrack.style.transform = `translateX(${translateX}px)`;
-
             lightboxImages.forEach((wrapper, i) => {
                 if (i === currentIndex) wrapper.classList.add('active');
                 else wrapper.classList.remove('active');
@@ -173,39 +249,16 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => { updateCarousel(); }, 100);
         }
 
-        function closeLightbox() {
-            lightbox.classList.remove('active');
-        }
+        function closeLightbox() { lightbox.classList.remove('active'); }
+        function showNext() { currentIndex = (currentIndex + 1) % lightboxImages.length; updateCarousel(); }
+        function showPrev() { currentIndex = (currentIndex - 1 + lightboxImages.length) % lightboxImages.length; updateCarousel(); }
 
-        function showNext() {
-            currentIndex++;
-            if (currentIndex >= lightboxImages.length) currentIndex = 0;
-            updateCarousel();
-        }
-
-        function showPrev() {
-            currentIndex--;
-            if (currentIndex < 0) currentIndex = lightboxImages.length - 1;
-            updateCarousel();
-        }
-
-        // --- 3. ÉVÉNEMENTS LIGHTBOX ---
         if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
-        
-        if (nextBtn) nextBtn.addEventListener('click', (e) => { 
-            e.stopPropagation(); showNext(); 
-        });
-        
-        if (prevBtn) prevBtn.addEventListener('click', (e) => { 
-            e.stopPropagation(); showPrev(); 
-        });
-        
+        if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); showNext(); });
+        if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); showPrev(); });
         if (lightbox) lightbox.addEventListener('click', (e) => {
-            if (e.target === lightbox || e.target === lightboxTrack || e.target.classList.contains('lightbox-carousel-track-container')) {
-                closeLightbox();
-            }
+            if (e.target === lightbox || e.target === lightboxTrack || e.target.classList.contains('lightbox-carousel-track-container')) closeLightbox();
         });
-
         document.addEventListener('keydown', (e) => {
             if (lightbox && lightbox.classList.contains('active')) {
                 if (e.key === 'Escape') closeLightbox();
